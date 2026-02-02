@@ -7,7 +7,10 @@ COPY client ./client
 WORKDIR /app/client
 
 RUN npm install
+RUN npm run build
 
-EXPOSE 5173
+RUN npm install -g serve
 
-CMD ["npm", "run", "dev", "--", "--host"]
+EXPOSE 10000
+
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
