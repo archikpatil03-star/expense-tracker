@@ -11,58 +11,39 @@ const statsRoutes = require('./routes/statsRoutes');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-const corsOptions = {
-    origin: function (origin, callback) {
-
-        if (!origin) return callback(null, true);
-
-        const allowedPatterns = [
-            /^http:\/\/localhost:\d+$/,
-            /^http:\/\/127\.0\.0\.1:\d+$/,
-            /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
-            /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/
-        ];
-
-        const isAllowed = allowedPatterns.some(pattern => pattern.test(origin));
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
+// ✅ SIMPLE CORS (allow frontend + all for now)
+app.use(cors());
 app.use(express.json());
 
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/stats', statsRoutes);
 
+// ✅ Test route
 app.get('/', (req, res) => {
-    res.send('Expense Tracker API Running');
+  res.send('Expense Tracker API Running');
 });
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// ✅ Start server after DB init
 const startServer = async () => {
-    try {
+  try {
+    await initDb();
+    console.log("Database connected successfully");
 
-        await initDb();
-        app.listen(PORT, '0.0.0.0', () => {
-            console.log(`Server running on http://0.0.0.0:${PORT}`);
-            console.log(`Access locally: http://localhost:${PORT}`);
-        });
-    } catch (error) {
-        console.error('Failed to initialize database:', error);
-        process.exit(1);
-    }
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+
+  } catch (err) {
+    console.error("Database init failed:", err);
+    process.exit(1);
+  }
 };
 
 startServer();
